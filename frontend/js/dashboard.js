@@ -31,8 +31,20 @@ const equipments = [
 ];
 console.table(equipments);
 
-const activeTotal = document.querySelector("#activeTotal");
-const preventiveTotal = document.querySelector("#preventiveTotal")
+const activeTotal = document.getElementById("activesTotal").textContent = activeEquipaments;
 
-console.log("#activeTotal: " + activeTotal.textContent);
-activeTotal.textContent = 50;
+const preventiveTotal = document.getElementById("preventivesTotal").textContent = preventiveMaintenance;
+
+const maintenance = document.getElementById("maintenanceEquipaments total");
+
+function dashboardRefresh() 
+{
+    const actives = equipaments.filter(equipament => equipament.status === "active").length;
+
+    const inMaintenance = equipaments.filter(equipament => equipament.status === "maintenance").length;
+
+    activeTotal.textContent = actives;
+    maintenanceEquipamestTotal.textContent = inMaintenance;
+
+    console.log("Dashboard atualizado");
+}
