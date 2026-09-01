@@ -13,38 +13,136 @@ const equipments = [
     {   id:1,
         name: "Compressor",
         local: "Oficina",
-        status: true,
+        status: "active",
         patrimony: "12-PP",
     },
     {   id:2,
         name: "Torno",
         local: "Oficina",
-        status: true,
+        status: "active",
         patrimony: "1-PP",    
     },
     {   id:3,
         name: "Gerador",
         local: "Casa de Maquinas",
-        status: false,
+        status: "maintenance",
         patrimony: "65-PP",
+    },
+    {   id:4,
+        name: "Gerador Grande",
+        local: "Casa de Maquinas",
+        status: "maintenance",
+        patrimony: "70-PP",
     }
 ];
 console.table(equipments);
 
-const activeTotal = document.getElementById("activesTotal").textContent = activeEquipaments;
+const activeTotal = document.querySelector("#activesTotal");
+const preventiveTotal = document.querySelector("#preventiveTotal");
+const maintenanceEquipamentsTotal = document.querySelector("#maintenanceEquipmentsTotal");
+const equipmentsTable = document.querySelector("#equipmentsTable")
+const searchInput = document.getElementById("searchInput");
+const btnNewEquipment = document.getElementById("btnNewEquipment");
+const modalElement = document.getElementById("equipmentModal");
+const modal = new bootstrap.Modal(modalElement);
 
-const preventiveTotal = document.getElementById("preventivesTotal").textContent = preventiveMaintenance;
-
-const maintenance = document.getElementById("maintenanceEquipaments total");
+console.log("activeTotal: "+ activeTotal.textContent);
 
 function dashboardRefresh() 
 {
-    const actives = equipaments.filter(equipament => equipament.status === "active").length;
+    const actives = equipments.filter(
+        equipment => equipment.status === "active"
+        ).length;
 
-    const inMaintenance = equipaments.filter(equipament => equipament.status === "maintenance").length;
+    const inMaintenance = equipments.filter(
+        equipment => equipment.status === "maintenance"
+        ).length;
 
     activeTotal.textContent = actives;
-    maintenanceEquipamestTotal.textContent = inMaintenance;
+    maintenanceEquipamentsTotal.textContent = inMaintenance;
 
     console.log("Dashboard atualizado");
+}
+
+dashboardRefresh();
+
+function equipmentsTableRender(list) {
+    equipmentsTable.innerHTML="";
+
+    list.forEach(equipment => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+        <td>${equipment.name}</td>
+        <td>${equipment.local}</td>
+        <td>${equipment.status}</td>
+        <td>
+        <button class="btn btn-danger"
+        onclick="equipmentDelete(${equipment.id})"
+        >Excluir</button>
+        </td>
+        `
+
+        equipmentsTable.appendChild(row);
+
+    })
+}
+
+equipmentsTableRender(equipments);
+
+searchInput.addEventListener("input", function (){
+    const term = searchInput.value.toLowerCase();
+
+    const result = equipments.filter(equipment => 
+        equipment.name.toLowerCase().includes(term));
+
+    equipmentsTableRender(result);
+})
+
+btnNewEquipment.addEventListener("click", function(){
+    modal.show();
+});
+
+const btnSave = document.getElementById("btnSaveEquipment");
+const equipmentName = document.getElementById("equipmentName");
+
+btnSave.addEventListener("click", function(){
+    if (equipmentName.value.trim() === ""){
+        console.warn("Nome do equipamento não informado");
+        alert("Informe o nome do equipamento.");
+        return;
+    }
+
+    const newEquipment = {
+        id: equipments.length + 1,
+        name: equipmentName.value,
+        local: "Não informado",
+        status: "active",
+        patrimony: `${(equipments.length + 1).padStart(3, "0")}-PP`
+    }
+
+    equipments.push(newEquipment);
+    equipmentsTableRender(equipments);
+    dashboardRefresh();
+
+    modal.hide();
+    equipmentName.value = "";
+})
+
+function equipmentDelete(id){
+    const index = equipments.findIndex(
+        equipment => equipment.id === id
+    );
+
+    if(index === -1){
+        console.error("Equipamento não encontrado:", id);
+        return;
+    }
+
+    equipments.splice(index,1);
+    equipmentsTableRender(equipments);
+    dashboardRefresh();
+    
+    console.log("Equipamento removido", id);
+    
 }
