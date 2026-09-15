@@ -48,23 +48,23 @@ const modal = new bootstrap.Modal(modalElement);
 
 console.log("activeTotal: "+ activeTotal.textContent);
 
-function dashboardRefresh() 
-{
-    const actives = equipments.filter(
-        equipment => equipment.status === "active"
-        ).length;
+// function dashboardRefresh() 
+// {
+//     const actives = equipments.filter(
+//         equipment => equipment.status === "active"
+//         ).length;
 
-    const inMaintenance = equipments.filter(
-        equipment => equipment.status === "maintenance"
-        ).length;
+//     const inMaintenance = equipments.filter(
+//         equipment => equipment.status === "maintenance"
+//         ).length;
 
-    activeTotal.textContent = actives;
-    maintenanceEquipamentsTotal.textContent = inMaintenance;
+//     activeTotal.textContent = actives;
+//     maintenanceEquipamentsTotal.textContent = inMaintenance;
 
-    console.log("Dashboard atualizado");
-}
+//     console.log("Dashboard atualizado");
+// }
 
-dashboardRefresh();
+// dashboardRefresh();
 
 function equipmentsTableRender(list) {
     equipmentsTable.innerHTML="";
@@ -123,7 +123,7 @@ btnSave.addEventListener("click", function(){
 
     equipments.push(newEquipment);
     equipmentsTableRender(equipments);
-    dashboardRefresh();
+    // dashboardRefresh();
 
     modal.hide();
     equipmentName.value = "";
@@ -146,3 +146,29 @@ function equipmentDelete(id){
     console.log("Equipamento removido", id);
     
 }
+
+async function dashboardLoad() {
+    try {
+        const response = await fetch("http://localhost:3000/dashboard");
+        
+        if (!response.ok) {
+            throw new Error("Não foi possivel carregar o dashboard");
+        }
+
+
+        const data = await response.json();
+        console.log("Dados recebidos: ", data);
+
+        const actives = data.activeEquips;
+        const inMaintenance = data.inMaintenance;
+        const preventiveEquips = data.preventiveMaintenance;
+
+        activeTotal.textContent = actives;
+        maintenanceEquipamentsTotal.textContent= inMaintenance;
+        preventiveTotal.textContent = preventiveEquips;
+
+    } catch (error) {
+        console.error("Erro ao carregar o dashboard: ", error);
+    };
+}
+dashboardLoad();
