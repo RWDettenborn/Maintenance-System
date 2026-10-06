@@ -2,12 +2,13 @@ const express = require("express");
 const router = express.Router();
 
 const {
-    getAllEquipments
-} = require("../controllers/equipmentControllers");
+    getAllEquipments,
+    createEquipment,
+    deleteEquipment
+} = require("../controllers/equipmentController");
 
 router.get("/", getAllEquipments);
-// router.get("/:id", getEquipments);
-// router.get("/:id", deleteEquipments);
+router.post("/", createEquipment);
+router.delete("/:id", deleteEquipment);
 
 module.exports = router;
-

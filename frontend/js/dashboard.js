@@ -9,33 +9,8 @@ let preventiveMaintenance = 10;
 console.log("Nome do sistema: " + SystemName);
 console.info("Em manutenção" + maintenanceEquipments);
 
-const equipments = [
-    {   id:1,
-        name: "Compressor",
-        local: "Oficina",
-        status: "active",
-        patrimony: "12-PP",
-    },
-    {   id:2,
-        name: "Torno",
-        local: "Oficina",
-        status: "active",
-        patrimony: "1-PP",    
-    },
-    {   id:3,
-        name: "Gerador",
-        local: "Casa de Maquinas",
-        status: "maintenance",
-        patrimony: "65-PP",
-    },
-    {   id:4,
-        name: "Gerador Grande",
-        local: "Casa de Maquinas",
-        status: "maintenance",
-        patrimony: "70-PP",
-    }
-];
-console.table(equipments);
+const equipments = [];
+const equipmentsUrl = "http://localhost:3000/equipments";
 
 const activeTotal = document.querySelector("#activesTotal");
 const preventiveTotal = document.querySelector("#preventiveTotal");
@@ -72,16 +47,22 @@ function equipmentsTableRender(list) {
     list.forEach(equipment => {
         const row = document.createElement("tr");
 
-        row.innerHTML = `
-        <td>${equipment.name}</td>
-        <td>${equipment.local}</td>
-        <td>${equipment.status}</td>
-        <td>
-        <button class="btn btn-danger"
-        onclick="equipmentDelete(${equipment.id})"
-        >Excluir</button>
-        </td>
-        `
+        const nameCell = document.createElement("td");
+        nameCell.textContent = equipment.name;
+        const localCell = document.createElement("td");
+        localCell.textContent = equipment.local;
+        const statusCell = document.createElement("td");
+        statusCell.textContent = equipment.status;
+        const actionCell = document.createElement("td");
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "btn btn-danger";
+        deleteButton.textContent = "Excluir";
+        deleteButton.addEventListener("click", function () {
+            equipmentDelete(equipment.id);
+        });
+        actionCell.appendChild(deleteButton);
+        row.append(nameCell, localCell, statusCell, actionCell);
 
         equipmentsTable.appendChild(row);
 
@@ -106,69 +87,71 @@ btnNewEquipment.addEventListener("click", function(){
 const btnSave = document.getElementById("btnSaveEquipment");
 const equipmentName = document.getElementById("equipmentName");
 
-btnSave.addEventListener("click", function(){
-    if (equipmentName.value.trim() === ""){
+btnSave.addEventListener("click", async function(){
+    const name = equipmentName.value.trim();
+    if (name === ""){
         console.warn("Nome do equipamento não informado");
         alert("Informe o nome do equipamento.");
         return;
     }
 
-    const newEquipment = {
-        id: equipments.length + 1,
-        name: equipmentName.value,
-        local: "Não informado",
-        status: "active",
-        patrimony: `${(equipments.length + 1).padStart(3, "0")}-PP`
-    }
-
-    equipments.push(newEquipment);
-    equipmentsTableRender(equipments);
-    // dashboardRefresh();
-
-    modal.hide();
-    equipmentName.value = "";
-})
-
-function equipmentDelete(id){
-    const index = equipments.findIndex(
-        equipment => equipment.id === id
-    );
-
-    if(index === -1){
-        console.error("Equipamento não encontrado:", id);
-        return;
-    }
-
-    equipments.splice(index,1);
-    equipmentsTableRender(equipments);
-    dashboardRefresh();
-    
-    console.log("Equipamento removido", id);
-    
-}
-
-async function dashboardLoad() {
+    btnSave.disabled = true;
     try {
-        const response = await fetch("http://localhost:3000/dashboard");
-        
+        const response = await fetch(equipmentsUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name })
+        });
+        const result = await response.json();
         if (!response.ok) {
-            throw new Error("Não foi possivel carregar o dashboard");
+            throw new Error(result.message || "Não foi possível salvar o equipamento.");
         }
 
+        equipments.push(result);
+        equipmentsTableRender(equipments);
+        modal.hide();
+        equipmentName.value = "";
+    } catch (error) {
+        console.error("Erro ao salvar equipamento:", error);
+        alert(error.message || "Não foi possível salvar o equipamento.");
+    } finally {
+        btnSave.disabled = false;
+    }
+})
+
+async function equipmentDelete(id){
+    try {
+        const response = await fetch(`${equipmentsUrl}/${id}`, { method: "DELETE" });
+        if (!response.ok) {
+            const result = await response.json();
+            throw new Error(result.message || "Não foi possível excluir o equipamento.");
+        }
+
+        const index = equipments.findIndex(equipment => equipment.id === id);
+        if (index !== -1) {
+            equipments.splice(index, 1);
+            equipmentsTableRender(equipments);
+        }
+    } catch (error) {
+        console.error("Erro ao excluir equipamento:", error);
+        alert(error.message || "Não foi possível excluir o equipamento.");
+    }
+}
+
+async function equipmentsLoad() {
+    try {
+        const response = await fetch(equipmentsUrl);
+        if (!response.ok) {
+            throw new Error("Não foi possível carregar os equipamentos.");
+        }
 
         const data = await response.json();
-        console.log("Dados recebidos: ", data);
-
-        const actives = data.activeEquips;
-        const inMaintenance = data.inMaintenance;
-        const preventiveEquips = data.preventiveMaintenance;
-
-        activeTotal.textContent = actives;
-        maintenanceEquipamentsTotal.textContent= inMaintenance;
-        preventiveTotal.textContent = preventiveEquips;
-
+        equipments.splice(0, equipments.length, ...data);
+        equipmentsTableRender(equipments);
     } catch (error) {
-        console.error("Erro ao carregar o dashboard: ", error);
-    };
+        console.error("Erro ao carregar equipamentos:", error);
+        alert(error.message || "Não foi possível carregar os equipamentos.");
+    }
 }
-dashboardLoad();
+
+equipmentsLoad();
