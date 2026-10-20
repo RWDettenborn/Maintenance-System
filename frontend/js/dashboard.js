@@ -1,3 +1,32 @@
+import { signOut } from
+'https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js';
+
+import { onAuthStateChanged } from
+'https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js';
+
+import { auth } from "./firebase.js";
+
+const logoutButton = document.querySelector("#logoutButton");
+const userInfo = document.querySelector("#userInfo");
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        window.location.href = "./dashboard.html";
+        return;
+    }
+    userInfo.textContent = "Usuário: ${user.email}";
+});
+
+logoutButton.addEventListener("click", async () => {
+    try {
+        await signOut(auth);
+        window.location.href = "./login.html";
+    } catch (error) {
+        console.error("Erro ao sair da conta:", error.code);
+        alert("Não foi possível encerrar a sessão. Tente novamente.");
+    }
+});
+
 console.log("Carregou o Dashboard ");
 
 const SystemName = "Sistema de Controle de Manutenção";

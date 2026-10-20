@@ -1,0 +1,20 @@
+<form id="loginForm">
+    <div class="mb-3">
+        <label for="email" class="form-label">E-mail</label>
+        <input type="email" class="form-control" id="email" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Senha</label>
+        <input type="password" class="form-control" id="password" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">Entrar</button>
+    <button type="button" id="registerButton"
+    class="btn btn-outline-secondary w-100 mt-2">Criar Conta</button>
+    <button type="button" id="resetPasswordButton"
+    class="btn btn-link">Esqueci minha senha</button>
+
+    <p id="feedback" role="status" aria-live="polite"></p>
+
+</form>
+<script type="module" src="./js/login.js"></script>
